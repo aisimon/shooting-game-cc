@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Neon Blitz</title>
+<title>Iron Frontier</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#05060f">
+<meta name="theme-color" content="#0a0812">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="manifest" href="manifest.json">
@@ -15,45 +15,72 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="game"></canvas>
+  <div id="screen">
+    <canvas id="game"></canvas>
+    <div id="scanlines"></div>
+    <div id="vignette"></div>
 
-  <div id="hud">
-    <div id="hud-left">
-      <div class="hud-row">SCORE <span id="score">0</span></div>
-      <div class="hud-row">BEST <span id="best">0</span></div>
+    <div id="hud">
+      <div id="hud-left">
+        <div class="hud-tag">XP <span id="score">000000</span></div>
+        <div class="hearts" id="lives"></div>
+      </div>
+      <div id="boss-hud" class="hidden">
+        <div class="hud-tag boss-tag">DRAKO-9</div>
+        <div class="bar-frame"><div id="boss-bar" class="bar-fill boss-fill"></div></div>
+      </div>
+      <div id="hud-right">
+        <button id="mute-btn" class="icon-btn" aria-label="Toggle sound">🔊</button>
+        <button id="pause-btn" class="icon-btn" aria-label="Pause">❚❚</button>
+      </div>
     </div>
-    <div id="hud-center">
-      <div id="wave-banner"></div>
+
+    <div id="wave-banner"></div>
+
+    <div id="start-screen" class="overlay">
+      <h1 class="pixel-title">IRON<br><span>FRONTIER</span></h1>
+      <p class="tagline">Run. Gun. Slash. Survive the frontier.</p>
+      <button id="start-btn" class="primary-btn">TAP TO START</button>
+      <p class="hint">Left/Right stick to move &middot; A to jump &middot; B to slash &middot; gun auto-fires</p>
     </div>
-    <div id="hud-right">
-      <div id="lives"></div>
-      <button id="mute-btn" aria-label="Toggle sound">🔊</button>
+
+    <div id="gameover-screen" class="overlay hidden">
+      <h1 class="pixel-title gameover-title">GAME<br>OVER</h1>
+      <p class="tagline">XP: <span id="final-score">0</span></p>
+      <p class="tagline" id="new-best-msg"></p>
+      <button id="retry-btn" class="primary-btn">RETRY</button>
+    </div>
+
+    <div id="win-screen" class="overlay hidden">
+      <h1 class="pixel-title win-title">VICTORY</h1>
+      <p class="tagline">DRAKO-9 destroyed &middot; XP: <span id="win-score">0</span></p>
+      <button id="win-retry-btn" class="primary-btn">PLAY AGAIN</button>
+    </div>
+
+    <div id="pause-screen" class="overlay hidden">
+      <h1 class="pixel-title">PAUSED</h1>
+      <button id="resume-btn" class="primary-btn">RESUME</button>
+    </div>
+
+    <div id="rotate-hint" class="overlay hidden">
+      <div class="rotate-icon">⟳</div>
+      <p class="tagline">Rotate to landscape for the best experience</p>
+    </div>
+
+    <div id="touch-controls">
+      <div id="stick-zone" class="touch-zone">
+        <div id="stick-base"><div id="stick-nub"></div></div>
+      </div>
+      <div id="action-zone" class="touch-zone">
+        <button id="btn-jump" class="action-btn">A</button>
+        <button id="btn-slash" class="action-btn">B</button>
+      </div>
     </div>
   </div>
-
-  <div id="start-screen" class="overlay">
-    <h1>NEON <span>BLITZ</span></h1>
-    <p class="tagline">Drag to fly. Auto-fire is always on.</p>
-    <button id="start-btn" class="primary-btn">TAP TO START</button>
-    <p class="hint">Works with mouse on desktop, touch on mobile</p>
-  </div>
-
-  <div id="gameover-screen" class="overlay hidden">
-    <h1>GAME OVER</h1>
-    <p class="tagline">Score: <span id="final-score">0</span></p>
-    <p class="tagline" id="new-best-msg"></p>
-    <button id="retry-btn" class="primary-btn">PLAY AGAIN</button>
-  </div>
-
-  <div id="pause-screen" class="overlay hidden">
-    <h1>PAUSED</h1>
-    <button id="resume-btn" class="primary-btn">RESUME</button>
-  </div>
-
-  <button id="pause-btn" aria-label="Pause">❚❚</button>
 </div>
 
 <script src="js/audio.js"></script>
+<script src="js/sprites.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

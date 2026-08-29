@@ -69,16 +69,27 @@ const SFX = (() => {
       tone(140, 40, 0.4, 'sawtooth', 0.15, 0.02);
     },
     playerHit() { tone(300, 90, 0.35, 'sawtooth', 0.22); },
-    powerup() {
-      tone(520, 1040, 0.09, 'triangle', 0.15);
-      tone(660, 1320, 0.12, 'triangle', 0.12, 0.07);
-    },
+    jump() { tone(300, 600, 0.1, 'square', 0.08); },
+    meleeWhoosh() { noiseBurst(0.15, 0.2, 3200); },
     waveStart() {
       tone(220, 440, 0.18, 'triangle', 0.14);
       tone(330, 660, 0.18, 'triangle', 0.1, 0.09);
     },
     gameOver() {
       tone(400, 60, 0.9, 'sawtooth', 0.2);
+    },
+    bossRoar() {
+      tone(90, 45, 0.7, 'sawtooth', 0.25);
+      noiseBurst(0.6, 0.2, 900, 0.05);
+    },
+    bossFire() {
+      noiseBurst(0.9, 0.3, 2600);
+      tone(200, 60, 0.5, 'sawtooth', 0.12, 0.05);
+    },
+    victory() {
+      tone(440, 880, 0.16, 'triangle', 0.16);
+      tone(554, 1108, 0.16, 'triangle', 0.14, 0.15);
+      tone(659, 1318, 0.24, 'triangle', 0.16, 0.3);
     },
 
     startMusic() {
