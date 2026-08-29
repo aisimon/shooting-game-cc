@@ -1,0 +1,13 @@
+{
+  "name": "Neon Blitz",
+  "short_name": "Neon Blitz",
+  "description": "A mobile-friendly neon space shooter",
+  "start_url": ".",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#05060f",
+  "theme_color": "#05060f",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

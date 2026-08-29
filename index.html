@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Blitz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#05060f">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div id="hud-left">
+      <div class="hud-row">SCORE <span id="score">0</span></div>
+      <div class="hud-row">BEST <span id="best">0</span></div>
+    </div>
+    <div id="hud-center">
+      <div id="wave-banner"></div>
+    </div>
+    <div id="hud-right">
+      <div id="lives"></div>
+      <button id="mute-btn" aria-label="Toggle sound">🔊</button>
+    </div>
+  </div>
+
+  <div id="start-screen" class="overlay">
+    <h1>NEON <span>BLITZ</span></h1>
+    <p class="tagline">Drag to fly. Auto-fire is always on.</p>
+    <button id="start-btn" class="primary-btn">TAP TO START</button>
+    <p class="hint">Works with mouse on desktop, touch on mobile</p>
+  </div>
+
+  <div id="gameover-screen" class="overlay hidden">
+    <h1>GAME OVER</h1>
+    <p class="tagline">Score: <span id="final-score">0</span></p>
+    <p class="tagline" id="new-best-msg"></p>
+    <button id="retry-btn" class="primary-btn">PLAY AGAIN</button>
+  </div>
+
+  <div id="pause-screen" class="overlay hidden">
+    <h1>PAUSED</h1>
+    <button id="resume-btn" class="primary-btn">RESUME</button>
+  </div>
+
+  <button id="pause-btn" aria-label="Pause">❚❚</button>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
