@@ -47,6 +47,7 @@ let best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
 let score = 0, lives = 3, maxLives = 3, wave = 0;
 let spawnQueue = [], spawnTimer = 0, waveTimer = 0;
 let bossActive = false, bossDefeated = false, boss = null;
+let gameTime = 0; // drives ambient background animation (rocket launches, etc.)
 
 const camera = { x: 0, targetX: 0, locked: false, lockX: 0 };
 
@@ -309,6 +310,7 @@ function winGame() {
 // ---------- Update ----------
 function update(dt) {
   if (state !== STATE.PLAYING) return;
+  gameTime += dt;
 
   const moveInput = stickX !== 0 ? stickX : (keyRight ? 1 : 0) - (keyLeft ? 1 : 0);
   player.vx = moveInput * MOVE_SPEED;
@@ -539,6 +541,7 @@ function drawBackground() {
   ctx.beginPath(); ctx.arc(((moonX % (W * 1.4)) + W * 1.4) % (W * 1.4) - W * 0.2, H * 0.22, 60, 0, Math.PI * 2); ctx.fill();
 
   drawBuildingLayer(camera.x * 0.15, '#3a2a48', 260, 90, 0.55);
+  drawRocketScene(camera.x * 0.25);
   drawBuildingLayer(camera.x * 0.35, '#241a30', 220, 140, 0.85);
 
   // ground
@@ -560,6 +563,119 @@ function drawBackground() {
 function hash01(seed) {
   const v = Math.sin(seed * 12.9898) * 43758.5453;
   return v - Math.floor(v);
+}
+
+// A generic reusable-booster silhouette (no branding) that periodically
+// launches, disappears off the top of the sky, then re-enters and lands
+// on its pad — purely ambient background decoration.
+const ROCKET_CYCLE = 16;   // seconds for one full launch-and-land loop
+const ROCKET_PERIOD = 2200; // world-units between launch pads
+
+function drawRocketScene(offsetX) {
+  const period = ROCKET_PERIOD;
+  const off = ((offsetX % period) + period) % period;
+  for (let x = -off - period; x < W + period; x += period) {
+    const seed = Math.floor((x + offsetX) / period);
+    const padX = x + period * 0.5;
+    if (padX < -80 || padX > W + 80) continue;
+    const phaseOffset = hash01(seed + 500) * ROCKET_CYCLE;
+    drawOneRocket(padX, (gameTime + phaseOffset) % ROCKET_CYCLE);
+  }
+}
+
+function drawOneRocket(padX, t) {
+  const maxRise = Math.min(H * 0.48, 260);
+  const padY = GROUND_Y;
+
+  // Cycle segments, in seconds: idle+ignite -> ascend -> gone -> descend
+  // (with a late landing burn) -> touchdown settle -> idle again.
+  const T_LAUNCH = 2.2, T_GONE = 6.5, T_REAPPEAR = 7.3, T_TOUCHDOWN = 11.8, T_SETTLE = 13;
+
+  let riseY = 0, flame = 0, legsOut = true, visible = true, smoke = 0;
+
+  if (t < T_LAUNCH) {
+    const pre = Math.max(0, t - (T_LAUNCH - 0.6)) / 0.6;
+    flame = pre; smoke = pre * 0.6;
+  } else if (t < T_GONE) {
+    const p = (t - T_LAUNCH) / (T_GONE - T_LAUNCH);
+    riseY = -(p * p) * maxRise;
+    flame = 1; legsOut = false; smoke = Math.max(0, 1 - p * 4);
+  } else if (t < T_REAPPEAR) {
+    visible = false;
+  } else if (t < T_TOUCHDOWN) {
+    const p = (t - T_REAPPEAR) / (T_TOUCHDOWN - T_REAPPEAR);
+    riseY = -(1 - p) * (1 - p) * maxRise; // fast fall, decelerating near touchdown
+    flame = p > 0.55 ? (p - 0.55) / 0.45 : 0; // landing burn kicks in late
+    legsOut = p > 0.8;
+  } else if (t < T_SETTLE) {
+    const p = (t - T_TOUCHDOWN) / (T_SETTLE - T_TOUCHDOWN);
+    flame = Math.max(0, 1 - p * 3); smoke = (1 - p) * 0.8;
+  }
+
+  if (!visible) return;
+
+  const baseY = padY + riseY;
+  const bodyW = 9, bodyH = 42, noseH = 10;
+
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+
+  ctx.fillStyle = 'rgba(40,35,55,0.9)';
+  ctx.fillRect(padX - 16, padY - 4, 32, 4);
+  ctx.fillRect(padX - 20, padY, 40, 3);
+
+  if (smoke > 0) {
+    ctx.fillStyle = `rgba(200,200,210,${0.35 * smoke})`;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.arc(padX + i * 10, padY - 2, 6 + Math.abs(i) * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  if (flame > 0) {
+    const flicker = 6 + Math.sin(gameTime * 40 + padX) * 3;
+    const flameH = (10 + flicker) * flame;
+    const grad = ctx.createLinearGradient(padX, baseY, padX, baseY + flameH);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,180,60,0.85)');
+    grad.addColorStop(1, 'rgba(255,90,40,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(padX - bodyW * 0.35, baseY);
+    ctx.lineTo(padX + bodyW * 0.35, baseY);
+    ctx.lineTo(padX, baseY + flameH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  if (legsOut) {
+    ctx.strokeStyle = 'rgba(180,185,195,0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padX - bodyW * 0.3, baseY - 4);
+    ctx.lineTo(padX - bodyW * 1.1, baseY + 3);
+    ctx.moveTo(padX + bodyW * 0.3, baseY - 4);
+    ctx.lineTo(padX + bodyW * 1.1, baseY + 3);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#d7dbe2';
+  ctx.fillRect(padX - bodyW / 2, baseY - bodyH, bodyW, bodyH);
+  ctx.fillStyle = 'rgba(30,34,42,0.5)';
+  ctx.fillRect(padX - bodyW / 2, baseY - bodyH * 0.42, bodyW, 4);
+  ctx.fillStyle = '#8890a0';
+  ctx.fillRect(padX - bodyW / 2 - 3, baseY - bodyH * 0.78, 3, 6);
+  ctx.fillRect(padX + bodyW / 2, baseY - bodyH * 0.78, 3, 6);
+  ctx.fillStyle = '#2a2e38';
+  ctx.beginPath();
+  ctx.moveTo(padX - bodyW / 2, baseY - bodyH);
+  ctx.lineTo(padX + bodyW / 2, baseY - bodyH);
+  ctx.lineTo(padX, baseY - bodyH - noseH);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
 }
 
 function drawBuildingLayer(offsetX, color, patternW, maxH, alpha) {
