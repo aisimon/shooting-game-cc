@@ -17,7 +17,10 @@ function drawPixelSprite(ctx, grid, palette, x, y, px, flip) {
       const color = palette[ch];
       if (!color) continue;
       ctx.fillStyle = color;
-      const drawX = flip ? -(col + 1) * px : col * px;
+      // Mirror within the row's own width so flip reflects the sprite in
+      // place instead of merely shifting it (the old -(col+1) math drew
+      // columns in the same left-to-right order, so nothing ever mirrored).
+      const drawX = flip ? (col - w + 1) * px : col * px;
       ctx.fillRect(drawX, row * px, px + 0.5, px + 0.5);
     }
   }
@@ -30,13 +33,15 @@ const PLAYER_PALETTE = {
   w: '#eef3fb', k: '#20232b', m: '#ffffff'
 };
 
-// 12 wide, 18 tall. Facing right.
+// 12 wide, 18 tall. Facing right — visor sits on the front (right) side of
+// the helmet only, so the head reads as a side profile instead of staring
+// straight out of the screen.
 const PLAYER_HEAD_TORSO = [
-  '....HHHH....',
-  '...HhhhhH...',
-  '...HvvvvH...',
-  '...HVVVVH...',
-  '....HHHH....',
+  '..HHHH......',
+  '.HhhhhHH....',
+  '.HhhhhhVVH..',
+  '..HhhhVVH...',
+  '...HHHHh....',
   '...bbbbbbG..',
   '..bbbbbbbGG.',
   '..bBbbbbGGg.',

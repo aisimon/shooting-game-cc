@@ -557,14 +557,25 @@ function drawBackground() {
   }
 }
 
+function hash01(seed) {
+  const v = Math.sin(seed * 12.9898) * 43758.5453;
+  return v - Math.floor(v);
+}
+
 function drawBuildingLayer(offsetX, color, patternW, maxH, alpha) {
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   const off = ((offsetX % patternW) + patternW) % patternW;
   for (let x = -off - patternW; x < W + patternW; x += patternW) {
     const seed = Math.floor((x + offsetX) / patternW);
-    const h = maxH * (0.4 + 0.6 * ((Math.sin(seed * 12.9898) * 43758.5453) % 1 + 1) / 2);
-    ctx.fillRect(x, GROUND_Y - h, patternW * 0.7, h);
+    const heightRoll = hash01(seed);
+    // A random ~1-in-5 building is a much taller tower, breaking up the
+    // skyline instead of every silhouette being the same height band.
+    const isTower = hash01(seed + 1000) > 0.8;
+    const h = isTower ? maxH * (1.4 + heightRoll * 1.0) : maxH * (0.4 + heightRoll * 0.6);
+    const w = isTower ? patternW * 0.4 : patternW * 0.7;
+    const bx = isTower ? x + (patternW * 0.7 - w) / 2 : x;
+    ctx.fillRect(bx, GROUND_Y - h, w, h);
   }
   ctx.globalAlpha = 1;
 }
@@ -624,7 +635,8 @@ function drawBoss() {
   ctx.save();
   ctx.shadowColor = 'rgba(138,79,214,0.6)';
   ctx.shadowBlur = 14;
-  drawPixelSprite(ctx, grid, BOSS_PALETTE, sx - 13 * PX, sy - 20 * PX, PX, true);
+  // BOSS_IDLE/BOSS_ATTACK are already authored facing left, so no mirroring needed.
+  drawPixelSprite(ctx, grid, BOSS_PALETTE, sx - 13 * PX, sy - 20 * PX, PX, false);
   ctx.restore();
 }
 
