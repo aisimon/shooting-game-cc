@@ -4,6 +4,7 @@ const SFX = (() => {
   let muted = false;
   let musicTimer = null;
   let musicStep = 0;
+  let unlocked = false;
 
   function ensureCtx() {
     if (!ctx) {
@@ -59,7 +60,19 @@ const SFX = (() => {
   return {
     setMuted(v) { muted = v; },
     isMuted() { return muted; },
-    unlock() { ensureCtx(); },
+    unlock() {
+      const c = ensureCtx();
+      if (unlocked) return;
+      // iOS Safari requires an actual buffer to be started inside the user
+      // gesture to fully unlock the Web Audio pipeline — resume() alone is
+      // often not enough and leaves every later sound silently dropped.
+      const buffer = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = buffer;
+      src.connect(c.destination);
+      src.start(0);
+      unlocked = true;
+    },
 
     shoot() { tone(880, 440, 0.08, 'square', 0.06); },
     enemyShoot() { tone(320, 180, 0.12, 'sawtooth', 0.05); },

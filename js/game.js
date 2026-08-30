@@ -75,6 +75,12 @@ function resetGame() {
 let stickX = 0, keyLeft = false, keyRight = false;
 let jumpQueued = false, meleeQueued = false;
 
+// Extra safety net for iOS Safari: unlock audio on the very first gesture of
+// any kind, since some versions don't treat pointerdown as a valid trigger.
+['touchend', 'mousedown', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, () => SFX.unlock(), { once: true, passive: true });
+});
+
 const stickZone = document.getElementById('stick-zone');
 const stickBase = document.getElementById('stick-base');
 const stickNub = document.getElementById('stick-nub');
@@ -212,7 +218,9 @@ function nextWave() {
 function spawnEnemy(type) {
   const def = ENEMY_TYPES[type];
   const x = camera.x + W + 40 + Math.random() * 80;
-  const y = type === 'drone' ? GROUND_Y - 140 - Math.random() * 100 : GROUND_Y;
+  // Drones hover roughly at gun height so standing fire can actually reach
+  // them — they used to spawn far above the bullets' flight line.
+  const y = type === 'drone' ? GROUND_Y - 35 - Math.random() * 20 : GROUND_Y;
   enemies.push({
     type, x, y, baseY: y, hp: def.hp, maxHp: def.hp, r: def.r,
     speed: def.speed, score: def.score, phase: Math.random() * Math.PI * 2,
@@ -381,7 +389,7 @@ function update(dt) {
     e.phase += dt;
     if (e.type === 'drone') {
       e.x -= e.speed * dt;
-      e.y = e.baseY + Math.sin(e.phase * 2) * 12;
+      e.y = e.baseY + Math.sin(e.phase * 2) * 8;
       e.shootTimer -= dt;
       if (e.shootTimer <= 0 && e.x < camera.x + W && e.x > camera.x) {
         const dx = player.x - e.x, dy = (player.y - 20) - e.y;
@@ -402,7 +410,9 @@ function update(dt) {
     for (const e of enemies) {
       if (e.dead) continue;
       const dx = b.x - e.x, dy = b.y - (e.y - 12);
-      if (dx * dx + dy * dy < (e.r + b.r) * (e.r + b.r)) {
+      // Vertical aim is forgiving on purpose — bullets travel a fixed
+      // horizontal line, so pixel-precise height matching feels unfair.
+      if (Math.abs(dx) < (e.r + b.r) && Math.abs(dy) < (e.r + 26)) {
         e.hp--; b.dead = true;
         burst(b.x, b.y, '#7cf0ff', 4, 60);
         break;
